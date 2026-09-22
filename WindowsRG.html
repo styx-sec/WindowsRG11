@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Windows RG11 — Really Good Edition (Build 26H1)</title>
+<style>
+:root{
+  --w11-accent:#0078d4; --w11-blue:#4cc2ff;
+  --win-bg:#f3f3f3; --win-border:#e0e0e0; --text:#1a1a1a;
+}
+*{box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; touch-action:manipulation;}
+html,body{margin:0;height:100%;overflow:hidden;font-family:'Segoe UI Variable','Segoe UI',system-ui,sans-serif;background:#000;color:var(--text);font-size:14px;overscroll-behavior:none;}
+button,.bbtn,.tbbtn,.tray,.dicon,.smapp,.spq,.pmitem{touch-action:manipulation;}
+#coFeed,#copiWin .wbody,.wbody{touch-action:auto;}
+
+/* ============ BOOT SCREEN ============ */
+#bootScreen{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9600;color:#fff;}
+.wlogo{display:flex;margin-bottom:28px;}
+.wlogo .sq{width:34px;height:34px;background:var(--w11-blue);margin:0 4px 4px 0;border-radius:2px;}
+.wlogo .sq:nth-child(3){margin-right:0}.wlogo .sq:nth-child(4){margin-left:8px}
+.spin{width:40px;height:40px;border:4px solid rgba(255,255,255,.15);border-top-color:#fff;border-radius:50%;animation:sp 1.1s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+#bootText{margin-top:34px;font-size:15px;color:#ccc;}
+.bootcredit{position:absolute;bottom:18px;font-size:11px;color:#555;}
+
+/* ============ UPDATE OVERLAY ============ */
+#updateOverlay{position:fixed;inset:0;background:#000;z-index:9400;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;}
+#upMsg{font-size:17px;margin-bottom:26px;}
+
+/* ============ CRASH SCREEN ============ */
+#crashScreen{position:fixed;inset:0;background:#0d0d0d;z-index:9500;display:none;flex-direction:column;align-items:center;justify-content:center;color:#ffcc00;font-family:Consolas,monospace;text-align:center;padding:20px;}
+#crashCode{font-size:26px;margin-bottom:14px;letter-spacing:1px;}
+#crashSub{color:#999;font-size:14px;line-height:1.7;max-width:560px;}
+#crashBtn{margin-top:34px;background:#222;color:#ffcc00;border:1px solid #555;padding:10px 28px;font-family:inherit;font-size:14px;cursor:pointer;border-radius:4px;}
+#crashBtn:hover{background:#333;}
+
+/* ============ DESKTOP ============ */
+#desktop{position:fixed;inset:0;display:none;background:linear-gradient(160deg,#0b2a5b 0%,#1e5799 45%,#4cc2ff 100%);}
+#dIcons{position:absolute;top:18px;left:14px;display:flex;flex-direction:column;gap:10px;width:92px;}
+.dicon{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:6px 2px;border-radius:6px;color:#fff;font-size:12px;text-align:center;line-height:1.3;}
+.dicon:hover{background:rgba(255,255,255,.18);}
+.dicon .ic{font-size:34px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6));}
+.dicon .lbl{text-shadow:0 1px 3px #000;}
+
+/* ============ TASKBAR ============ */
+#taskbar{position:absolute;left:0;right:0;bottom:0;height:52px;background:rgba(243,243,243,.82);backdrop-filter:blur(18px);border-top:1px solid rgba(255,255,255,.6);display:flex;align-items:center;padding:0 12px;z-index:800;}
+#tbCenter{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:4px;align-items:center;height:100%;}
+.tbbtn{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:22px;cursor:pointer;position:relative;background:transparent;}
+.tbbtn:hover{background:rgba(0,0,0,.08);}
+.tbbtn .dot{position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:#999;display:none;}
+.tbbtn.open .dot{display:block;background:var(--w11-accent);}
+#tbLeft,#tbRight{flex:1;display:flex;align-items:center;height:100%;}
+#tbRight{justify-content:flex-end;gap:2px;}
+.tray{display:flex;align-items:center;gap:6px;padding:8px 8px;border-radius:6px;font-size:13px;color:#333;}
+.tray:hover{background:rgba(0,0,0,.07);}
+
+/* ============ START MENU ============ */
+#startMenu{position:absolute;left:50%;transform:translateX(-50%);bottom:62px;width:560px;background:rgba(243,243,243,.92);backdrop-filter:blur(24px);border:1px solid #d8d8d8;border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,.4);z-index:850;display:none;padding:26px;}
+#smSearch{width:100%;padding:9px 14px;border-radius:20px;border:1px solid #ccc;background:#fff;font-size:13px;color:#333;outline:none;margin-bottom:22px;}
+.smh{font-size:13px;font-weight:600;margin:0 0 12px 4px;}
+#smGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:22px;}
+.smapp{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 2px;border-radius:8px;cursor:pointer;font-size:11.5px;text-align:center;line-height:1.25;color:#222;}
+.smapp:hover{background:rgba(0,0,0,.08);}
+.smapp .ic{font-size:30px;}
+#smFooter{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #dcdcdc;padding-top:14px;}
+#smUser{display:flex;align-items:center;gap:10px;font-weight:600;font-size:13.5px;padding:6px 8px;border-radius:6px;cursor:pointer;}
+#smUser:hover{background:rgba(0,0,0,.07);}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4cc2ff,#0078d4);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;}
+#smPower{font-size:20px;padding:6px 10px;border-radius:6px;cursor:pointer;background:transparent;}
+#smPower:hover{background:rgba(0,0,0,.08);}
+#powerMenu{position:absolute;right:34px;bottom:56px;width:220px;background:#f7f7f7;border:1px solid #d8d8d8;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:860;display:none;padding:8px;}
+.pmitem{padding:10px 12px;border-radius:6px;cursor:pointer;font-size:13.5px;display:flex;gap:10px;align-items:center;}
+.pmitem:hover{background:rgba(0,0,0,.07);}
+
+/* ============ SEARCH PANEL ============ */
+#searchPanel{position:absolute;left:50%;transform:translateX(-50%);bottom:62px;width:560px;background:rgba(243,243,243,.94);backdrop-filter:blur(24px);border:1px solid #d8d8d8;border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,.4);z-index:850;display:none;padding:20px;}
+.spq{padding:9px 12px;border-radius:6px;cursor:pointer;font-size:13.5px;color:#333;display:flex;gap:10px;align-items:center;}
+.spq:hover{background:rgba(0,0,0,.07);}
+
+/* ============ WINDOWS (generic) ============ */
+.win{position:absolute;min-width:280px;background:var(--win-bg);border:1px solid #cfcfcf;border-radius:9px;box-shadow:0 10px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;z-index:100;overflow:hidden;}
+.win .bar{height:36px;background:#eaeaea;display:flex;align-items:center;padding-left:12px;font-size:13px;color:#333;cursor:move;border-bottom:1px solid #dedede;flex:0 0 auto;touch-action:none;}
+.win .bbtns{margin-left:auto;display:flex;height:100%;}
+.bbtn{width:46px;height:100%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#444;cursor:pointer;border:none;background:transparent;}
+.bbtn:hover{background:rgba(0,0,0,.08);}
+.bbtn.x:hover{background:#e81123;color:#fff;}
+.wbody{padding:16px;overflow:auto;flex:1;font-size:13.5px;line-height:1.55;}
+
+/* buttons / forms */
+.btn{background:#fff;border:1px solid #c9c9c9;border-radius:4px;padding:7px 18px;font-size:13px;font-family:inherit;cursor:pointer;color:#222;}
+.btn:hover{border-color:#a0a0a0;background:#f5f5f5;}
+.btn.primary{background:var(--w11-accent);color:#fff;border:none;}
+.btn.primary:hover{background:#106ebe;}
+.btn:disabled{opacity:.5;cursor:default;}
+input.tin,select.tin{padding:8px 10px;border:1px solid #c9c9c9;border-radius:4px;font-size:13.5px;font-family:inherit;width:100%;margin-top:6px;background:#fff;}
+.lbl2{font-weight:600;margin-top:12px;display:block;font-size:13px;}
+.err{color:#c42b1c;font-size:12.5px;margin-top:8px;min-height:16px;}
+.muted{color:#777;font-size:12px;}
+.big{font-size:19px;font-weight:600;margin:0 0 10px;}
+
+/* ============ COPILOT (unsolicited right sidebar) ============ */
+#copiWin{position:fixed !important;right:0;top:0;bottom:0;width:352px;z-index:840;border-radius:0;border:none;border-left:1px solid #c9c9c9;box-shadow:-12px 0 40px rgba(0,0,0,.35);}
+#copiWin .wbody{padding:0;background:linear-gradient(180deg,#eef4fb,#f7fafd);display:flex;flex-direction:column;overflow-y:auto;min-height:0;}
+.copiTop{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #e2e8f0;font-weight:600;font-size:13.5px;}
+.copiDot{width:10px;height:10px;border-radius:50%;background:#ff3b3b;animation:blink 1.4s infinite;}
+@keyframes blink{50%{opacity:.2}}
+#copiStage{padding:8px 14px 4px;display:flex;justify-content:center;flex:0 0 auto;}
+#coSpeech{margin:6px 16px 10px;background:#fff;border:1px solid #dbe4ef;border-radius:12px;padding:11px 13px;font-size:13.5px;line-height:1.5;min-height:58px;box-shadow:0 1px 3px rgba(0,0,0,.06);flex:0 0 auto;}
+/* notification feed */
+#coFeedHead{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:12.5px;font-weight:700;color:#444;border-top:1px solid #e2e8f0;flex:0 0 auto;}
+#coFeedHead .cnt{background:var(--w11-accent);color:#fff;border-radius:10px;padding:1px 8px;font-size:11.5px;}
+#coDismiss{margin-left:auto;background:none;border:1px solid #bbb;border-radius:6px;font-size:11px;padding:4px 9px;cursor:pointer;color:#333;font-family:inherit;}
+#coFeed{flex:1 1 auto;min-height:0;overflow-y:auto;padding:0 12px 12px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:none;}
+.noti{background:#fff;border:1px solid #d5dde6;border-left:4px solid var(--w11-accent);border-radius:9px;padding:10px 12px;font-size:12.5px;line-height:1.45;box-shadow:0 2px 8px rgba(0,0,0,.08);animation:notiIn .35s ease;}
+.noti.warn{border-left-color:#f2b705;}
+.noti.danger{border-left-color:#e81123;}
+@keyframes notiIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+.noti .nt{display:flex;gap:8px;align-items:center;font-weight:700;font-size:12.5px;margin-bottom:3px;}
+.noti .nb{color:#333;}
+.noti .nm{margin-top:4px;color:#8a8a8a;font-size:11px;}
+#coBtns{display:flex;gap:8px;padding:0 16px 12px;flex-wrap:wrap;flex:0 0 auto;}
+#coBtns .btn{font-size:12.5px;padding:7px 14px;}
+
+/* copilot svg glitch */
+@media (max-width:720px){
+  #copiWin{width:min(280px,78vw);z-index:50;}
+  #copiStage svg{width:104px;height:120px;}
+  #coSpeech{min-height:44px;font-size:12.5px;}
+  /* windows open as near-full-screen sheets (very Windows 11 on a phone); Copilot lurks underneath */
+  .win:not(#copiWin){left:3vw!important;top:10vh!important;width:94vw!important;max-width:94vw;max-height:calc(100vh - 64px)!important;}
+  #startMenu,#searchPanel{width:min(94vw,560px);}
+  #dIcons{top:auto;bottom:64px;left:8px;}
+}
+.copiSvg .glitchA{animation:jit .9s steps(2) infinite;}
+.copiSvg .glitchB{animation:jit2 1.3s steps(3) infinite;}
+@keyframes jit{0%,100%{transform:translate(0,0)}50%{transform:translate(1.5px,-1px)}}
+@keyframes jit2{0%,100%{transform:translate(0,0)}33%{transform:translate(-1.5px,1px)}66%{transform:translate(1px,.5px)}}
+.drool{animation:drip 2.2s ease-in-out infinite;}
+@keyframes drip{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
+.syringeG{animation:syl 3.4s ease-in-out infinite;transform-origin:96px 92px;}
+@keyframes syl{0%,70%,100%{transform:rotate(0deg)}80%{transform:rotate(-14deg)}90%{transform:rotate(6deg)}}
+.syringeG2{animation:puff 4.1s ease-in-out infinite;transform-origin:52px 196px;}
+@keyframes puff{0%,75%,100%{transform:rotate(0deg)}85%{transform:rotate(-8deg)}92%{transform:rotate(3deg)}}
+.smoke{animation:smk 3.2s ease-in-out infinite;}
+.smoke.s2{animation-delay:.6s}.smoke.s3{animation-delay:1.2s}
+@keyframes smk{0%{opacity:.55;transform:translateY(0)}100%{opacity:0;transform:translateY(-16px)}}
+
+/* ============ misc ============ */
+.spinSm{width:26px;height:26px;border:3px solid #cfd8e3;border-top-color:var(--w11-accent);border-radius:50%;animation:sp 1s linear infinite;display:inline-block;vertical-align:middle;}
+.fileRow{display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid #e8e8e8;font-size:13px;}
+.toast{position:absolute;right:16px;bottom:70px;width:320px;background:rgba(245,245,245,.95);border:1px solid #d5d5d5;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:870;padding:13px 14px;font-size:13px;line-height:1.45;}
+.toast b{display:block;margin-bottom:3px;font-size:13.5px;}
+#sleepScreen{position:fixed;inset:0;background:#000;z-index:9700;display:none;}
+.miniWin{width:190px;}
+.miniWin .wbody{text-align:center;padding:22px 14px;font-size:12.5px;}
+</style>
+</head>
+<body>
+
+<!-- ================= BOOT ================= -->
+<div id="bootScreen">
+  <div class="wlogo"><div class="sq"></div><div class="sq"></div><div class="sq"></div><div class="sq"></div></div>
+  <div class="spin"></div>
+  <div id="bootText">Getting everything ready...</div>
+  <div class="bootcredit">Windows RG11 — a loving tribute to Newgrounds' "Windows RG Build 207" (James Web, 2001)</div>
+</div>
+
+<!-- ================= UPDATE OVERLAY ================= -->
+<div id="updateOverlay">
+  <div class="spin"></div>
+  <div id="upMsg">Getting everything ready...</div>
+</div>
+
+<!-- ================= CRASH ================= -->
+<div id="crashScreen">
+  <div id="crashCode">STOP CODE: YOU_WERE_WARNED</div>
+  <div id="crashSub"></div>
+  <button id="crashBtn" onclick="G.reboot()">Restart anyway</button>
+</div>
+
+<!-- ================= SLEEP ================= -->
+<div id="sleepScreen"></div>
+
+<!-- ================= DESKTOP ================= -->
+<div id="desktop">
+  <div id="dIcons">
+    <div class="dicon" onclick="G.open('thispc')"><div class="ic">🖥️</div><div class="lbl">This PC</div></div>
+    <div class="dicon" onclick="G.open('recycle')"><div class="ic">🗑️</div><div class="lbl">Recycle Bin</div></div>
+    <div class="dicon" onclick="G.open('winfolder')"><div class="ic">📁</div><div class="lbl">Windows</div></div>
+    <div class="dicon" onclick="G.open('xbox')"><div class="ic">🎮</div><div class="lbl">Xbox</div></div>
+    <div class="dicon" onclick="G.open('uninstall')"><div class="ic">❌</div><div class="lbl">Uninstall Windows 11.exe</div></div>
+  </div>
+
+  <!-- ============ TASKBAR ============ -->
+  <div id="taskbar">
+    <div id="tbLeft"></div>
+    <div id="tbCenter">
+      <div class="tbbtn" id="tbStart" title="Start" onclick="G.toggleStart()"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="1" y="1" width="10" height="10" rx="1.5" fill="#4cc2ff"/><rect x="13" y="1" width="10" height="10" rx="1.5" fill="#4cc2ff"/><rect x="1" y="13" width="10" height="10" rx="1.5" fill="#4cc2ff"/><rect x="13" y="13" width="10" height="10" rx="1.5" fill="#4cc2ff"/></svg></div>
+      <div class="tbbtn" id="tbSearch" title="Search" onclick="G.toggleSearch()"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg><div class="dot"></div></div>
+      <div class="tbbtn" title="Edge" onclick="G.open('edge')">🌐<div class="dot"></div></div>
+      <div class="tbbtn" title="Store" onclick="G.open('store')">🛒<div class="dot"></div></div>
+      <div class="tbbtn" title="Xbox" onclick="G.open('xbox')">🎮<div class="dot"></div></div>
+    </div>
+    <div id="tbRight">
+      <div class="tray" title="Connected: Internet (slow)">📶</div>
+      <div class="tray" title="Volume: 100% (mandatory)">🔊</div>
+      <div class="tray" id="batTray" title="Battery">🔋<span id="batPct">70%</span></div>
+      <div class="tray" id="clock">--:--</div>
+    </div>
+  </div>
+
+  <!-- ============ START MENU ============ -->
+  <div id="startMenu">
+    <input id="smSearch" placeholder="Type here to search" onfocus="G.smSearchFocus()" readonly>
+    <div class="smh">Pinned</div>
+    <div id="smGrid">
+      <div class="smapp" onclick="G.open('edge')"><div class="ic">🌐</div>Edge</div>
+      <div class="smapp" onclick="G.open('store')"><div class="ic">🛒</div>Store</div>
+      <div class="smapp" onclick="G.open('xbox')"><div class="ic">🎮</div>Xbox</div>
+      <div class="smapp" onclick="G.open('photos')"><div class="ic">🖼️</div>Photos</div>
+      <div class="smapp" onclick="G.open('mail')"><div class="ic">✉️</div>Mail</div>
+      <div class="smapp" onclick="G.open('settings')"><div class="ic">⚙️</div>Settings</div>
+      <div class="smapp" onclick="G.open('snip')"><div class="ic">✂️</div>Snipping Tool</div>
+      <div class="smapp" onclick="G.open('calc')"><div class="ic">🧮</div>Calculator</div>
+      <div class="smapp" onclick="G.open('notepad')"><div class="ic">📝</div>Notepad</div>
+      <div class="smapp" onclick="G.open('paint')"><div class="ic">🎨</div>Paint</div>
+      <div class="smapp" onclick="G.open('winfolder')"><div class="ic">📁</div>Windows</div>
+      <div class="smapp" onclick="G.open('support')"><div class="ic">🎫</div>Support Assistant</div>
+    </div>
+    <div id="smFooter">
+      <div id="smUser" onclick="G.open('setup')"><div class="avatar">?</div><span>No Account</span></div>
+      <div id="smPower" title="Power" onclick="G.togglePower()">⏻</div>
+    </div>
+  </div>
+
+  <div id="powerMenu">
+    <div class="pmitem" onclick="G.sleep()">😴 Sleep</div>
+    <div class="pmitem" onclick="G.reboot()">🔄 Restart</div>
+    <div class="pmitem" onclick="G.shutDown()">⏻ Shut down</div>
+  </div>
+
+  <!-- ============ SEARCH PANEL ============ -->
+  <div id="searchPanel">
+    <div class="spq">🔍 how to turn off windows 11</div>
+    <div class="spq">🔍 windows rg build 207 remake</div>
+    <div class="spq">🔍 why does copilot look like that</div>
+    <div class="spq">🔍 how to uninstall bloatware (premium)</div>
+    <div class="spq">🔍 windows 11 dark mode — now with subscription</div>
+  </div>
+
+  <!-- ============ COPILOT (unsolicited right sidebar) ============ -->
+  <div class="win" id="copiWin" style="display:none;">
+    <div class="bar">🤖 Copilot<div class="bbtns"><div class="bbtn x" onclick="G.closeCopi()">✕</div></div></div>
+    <div class="wbody" style="flex:1;display:flex;flex-direction:column;">
+      <div class="copiTop"><span class="copiDot"></span> Copilot — always on, always listening</div>
+      <div id="copiStage">
+        <svg class="copiSvg" width="132" height="152" viewBox="0 0 200 230">
+          <!-- hoodie -->
+          <g class="glitchA">
+            <path d="M40 96 Q40 78 62 74 L138 74 Q160 78 160 96 L166 200 Q166 214 150 214 L50 214 Q34 214 34 200 Z" fill="#f2f2f2" stroke="#cfcfcf" stroke-width="2"/>
+            <path d="M62 74 L138 74 Q150 92 100 96 Q50 92 62 74 Z" fill="#e0e0e0"/>
+            <!-- hood opening -->
+            <ellipse cx="100" cy="70" rx="34" ry="30" fill="#f2f2f2" stroke="#cfcfcf" stroke-width="2"/>
+            <ellipse cx="100" cy="68" rx="26" ry="23" fill="#151515"/>
+          </g>
+          <!-- face -->
+          <g class="glitchB">
+            <circle cx="90" cy="62" r="5.5" fill="#fff"/><circle cx="110" cy="62" r="5.5" fill="#fff"/>
+            <circle cx="90" cy="63" r="2.4" fill="#000"/><circle cx="110" cy="63" r="2.4" fill="#000"/>
+            <path d="M84 78 Q100 88 116 78" stroke="#fff" stroke-width="2.5" fill="none"/>
+            <path class="drool" d="M96 86 q3 10 1 16 q-4 -2 -3 -9 Z" fill="#bfe3ff"/>
+          </g>
+          <!-- hands -->
+          <circle cx="52" cy="196" r="10" fill="#f2d8c9"/><circle cx="148" cy="196" r="10" fill="#f2d8c9"/>
+          <!-- crack pipe in other hand -->
+          <g class="syringeG2">
+            <rect x="34" y="158" width="20" height="14" rx="3" fill="#bfe3ff" stroke="#7fa8c9" stroke-width="2"/>
+            <rect x="36" y="154" width="16" height="5" rx="2" fill="#e8f4ff" stroke="#7fa8c9" stroke-width="1.5"/>
+            <path d="M44 172 L60 198" stroke="#bfe3ff" stroke-width="7" stroke-linecap="round"/>
+            <path d="M44 172 L60 198" stroke="#e8f4ff" stroke-width="3" stroke-linecap="round"/>
+          </g>
+          <!-- smoke -->
+          <g opacity=".55">
+            <circle class="smoke s1" cx="44" cy="150" r="4" fill="#cfd8e3"/>
+            <circle class="smoke s2" cx="50" cy="146" r="3" fill="#cfd8e3"/>
+            <circle class="smoke s3" cx="40" cy="142" r="2.5" fill="#cfd8e3"/>
+          </g>
+          <!-- syringe in hand -->
+          <g class="syringeG">
+            <rect x="146" y="176" width="34" height="9" rx="3" fill="#dfe8f0" stroke="#9aa7b5" stroke-width="1.5"/>
+            <rect x="142" y="178" width="8" height="5" fill="#9aa7b5"/>
+            <line x1="180" y1="180.5" x2="192" y2="180.5" stroke="#9aa7b5" stroke-width="3"/>
+            <rect x="136" y="179.5" width="7" height="2" fill="#ff5d5d"/>
+          </g>
+          <!-- hoodie strings -->
+          <line x1="88" y1="96" x2="86" y2="122" stroke="#cfcfcf" stroke-width="2.5"/>
+          <line x1="112" y1="96" x2="114" y2="122" stroke="#cfcfcf" stroke-width="2.5"/>
+          <!-- scanline glitch -->
+          <rect class="glitchB" x="30" y="130" width="140" height="3" fill="#4cc2ff" opacity=".25"/>
+        </svg>
+      </div>
+      <div id="coSpeech"></div>
+      <div id="coBtns">
+        <button class="btn primary" onclick="G.copiReply('accept')">Accept</button>
+        <button class="btn" onclick="G.copiReply('decline')">Decline</button>
+        <button class="btn" onclick="G.copiReply('help')">Need help?</button>
+        <button class="btn" onclick="G.copiSay('I was not looking at you. I am always looking at you.')">What are you staring at?</button>
+      </div>
+      <div id="coFeedHead">🔔 Notifications <span class="cnt" id="notiCount">0</span><button id="coDismiss" onclick="G.dismissNotis()">Dismiss all</button></div>
+      <div id="coFeed"></div>
+    </div>
+  </div>
+
+</div><!-- /desktop -->
+
+<script>
+"use strict";
+/* ============================================================
+   Windows RG11 — Really Good Edition
+   Annoyance engine: every "choice" the user makes feeds it.
+   ============================================================ */
+const G = {
+  z: 100, annoyCount: 0, booted: false, batt: 70, _notiCount: 0,
+  crashCodes: ["STOP CODE: YOU_WERE_WARNED","STOP CODE: TOO_MANY_POPUPS","STOP CODE: COPILOT_HUNGER","STOP CODE: ACCOUNT_REQUIRED","STOP CODE: UPDATE_AT_97_PERCENT","STOP CODE: TPAH_ARE_YOU_SURE"],
+  winMeta: {}, // id -> {el, title}
+
+  /* ---------- boot / reboot ---------- */
+  start(){ this.boot(); },
+  boot(){
+    const b = document.getElementById('bootScreen');
+    b.style.display='flex';
+    const txts=["Getting everything ready...","Almost there...","Optimising your optimisations...","Installing optional things you didn't ask for..."];
+    let i=0; const iv=setInterval(()=>{i=(i+1)%txts.length; document.getElementById('bootText').textContent=txts[i];},1600);
+    setTimeout(()=>{clearInterval(iv); this.revealDesktop();},6500);
+  },
+  revealDesktop(){
+    document.getElementById('bootScreen').style.display='none';
+    document.getElementById('desktop').style.display='block';
+    if(!this.booted){
+      this.booted=true;
+      setTimeout(()=>{ this.openCopi("Hey! I'm Copilot. Let's get you set up — it'll only take forever."); },1200);
+      setTimeout(()=>{ this.open('setup'); },2400);
+    } else {
+      // back from a reboot: bloatware strikes again
+      setTimeout(()=>{ this.open('bloat1'); this.open('bloat2'); },900);
+      setTimeout(()=>{ this.openCopi("Welcome back! I've been thinking about you. Shall we install the recommended apps?"); },2300);
+    }
+    this.startBattery();
+    this.startNotis();
+  },
+  reboot(){
+    document.getElementById('crashScreen').style.display='none';
+    document.getElementById('sleepScreen').style.display='none';
+    const ov=document.getElementById('updateOverlay'), msg=document.getElementById('upMsg');
+    ov.style.display='flex'; msg.textContent="Getting everything ready...";
+    let p=0;
+    const iv=setInterval(()=>{
+      p = p<43 ? p+7 : (p<97 ? Math.min(97,p+1) : 97);
+      msg.textContent = p>=97 ? "Installing updates: 97% complete" : `Getting everything ready: ${p}% complete`;
+      if(p>=97){ clearInterval(iv); setTimeout(()=>{ ov.style.display='none'; this.boot(); },4200); }
+    },180);
+  },
+
+  /* ---------- annoyance engine ---------- */
+  annoy(n=1, note=""){
+    this.annoyCount += n;
+    if(this.annoyCount>=10 && document.getElementById('crashScreen').style.display!=='flex'){
+      setTimeout(()=>this.crash(),600);
+    }
+  },
+  crash(){
+    const c=document.getElementById('crashCode');
+    c.textContent=this.crashCodes[Math.floor(Math.random()*this.crashCodes.length)];
+    document.getElementById('crashSub').innerHTML =
+      "Your PC ran into a problem (a problem you caused by clicking things).<br>"+
+      "We're collecting information about the error — and about you.<br><br>"+
+      `Annoyances accumulated this session: <b>${this.annoyCount}</b>`;
+    document.getElementById('crashScreen').style.display='flex';
+  },
+
+  /* ---------- window management ---------- */
+  open(id){
+    let el=document.getElementById(id+'Win');
+    if(!el){ el=this.buildWindow(id); }
+    this.place(el);
+    el.style.display='flex';
+    el.style.zIndex=++this.z;
+    this.syncTaskbar();
+    return el;
+  },
+  place(el){
+    const off=(this.winMeta._n=(this.winMeta._n||0)+1)*26%180;
+    if(!el.dataset.placed){
+      el.style.left=(90+off)+'px'; el.style.top=(40+off)+'px'; el.dataset.placed=1;
+    }
+  },
+  close(id){
+    const el=document.getElementById(id+'Win'); if(el) el.style.display='none';
+    this.syncTaskbar();
+  },
+  syncTaskbar(){
+    document.querySelectorAll('#tbCenter .tbbtn').forEach(b=>{
+      b.classList.remove('open');
+    });
+  },
+
+  /* ---------- window factory ---------- */
+  buildWindow(id){
+    const defs=this.WINDOWS[id]; if(!defs) return null;
+    const el=document.createElement('div');
+    el.className='win'+(defs.cls?' '+defs.cls:'');
+    el.id=id+'Win';
+    el.style.setProperty('--w',(defs.w||420)+'px');
+    el.style.width=(defs.w||420)+'px';
+    el.innerHTML=`<div class="bar">${defs.icon} ${defs.title}<div class="bbtns">
+      <div class="bbtn" onclick="G.min('${id}')">—</div>
+      <div class="bbtn" onclick="G.max('${id}')">▢</div>
+      <div class="bbtn x" onclick="G.close('${id}')">✕</div></div></div>
+      <div class="wbody">${defs.body}</div>`;
+    document.getElementById('desktop').appendChild(el);
+    this.makeDraggable(el);
+    el.addEventListener('mousedown',()=>{el.style.zIndex=++this.z;});
+    this.winMeta[id]={el};
+    if(defs.onopen) defs.onopen(el);
+    return el;
+  },
+  min(id){ const e=document.getElementById(id+'Win'); if(e) e.style.display='none'; },
+  max(id){
+    const e=document.getElementById(id+'Win'); if(!e) return;
+    if(e.dataset.max){ e.dataset.max=''; e.style.cssText=e.dataset.prev||''; }
+    else{ e.dataset.prev=e.style.cssText; e.dataset.max=1;
+      e.style.left='0';e.style.top='0';e.style.width='100%';e.style.height='calc(100% - 52px)';e.style.borderRadius='0'; }
+  },
+  makeDraggable(el){
+    if(el.id==='copiWin') return; // the sidebar is fixed. It was not asked for, but it stays.
+    const bar=el.querySelector('.bar');
+    let sx,sy,ox,oy,drag=false;
+    bar.addEventListener('pointerdown',ev=>{
+      if(ev.target.closest('.bbtn'))return;
+      drag=true; sx=ev.clientX; sy=ev.clientY; ox=el.offsetLeft; oy=el.offsetTop;
+      el.style.zIndex=++this.z; bar.setPointerCapture(ev.pointerId);
+    });
+    bar.addEventListener('pointermove',ev=>{
+      if(!drag)return;
+      el.style.left=Math.max(-60,ox+ev.clientX-sx)+'px';
+      el.style.top=Math.max(0,oy+ev.clientY-sy)+'px';
+    });
+    bar.addEventListener('pointerup',()=>drag=false);
+  },
+
+  /* ---------- start / power / search ---------- */
+  toggleStart(){
+    const s=document.getElementById('startMenu'),p=document.getElementById('powerMenu');
+    p.style.display='none';
+    s.style.display = s.style.display==='block'?'none':'block';
+    document.getElementById('tbStart').classList.toggle('open',s.style.display==='block');
+  },
+  togglePower(){
+    const p=document.getElementById('powerMenu');
+    p.style.display = p.style.display==='block'?'none':'block';
+  },
+  toggleSearch(){
+    const s=document.getElementById('searchPanel'),m=document.getElementById('startMenu');
+    m.style.display='none'; document.getElementById('tbStart').classList.remove('open');
+    if(s.style.display!=='block'){
+      const qs=[...s.querySelectorAll('.spq')];
+      const q=qs[Math.floor(Math.random()*qs.length)];
+      s.innerHTML=`<div class="spq">🔍 ${q.textContent.replace(/^🔍 /,'')}</div>`;
+    } else { this.annoy(); return; }
+    s.style.display='block';
+  },
+  smSearchFocus(){ this.toggleStart(); this.toggleSearch(); },
+
+  sleep(){
+    document.getElementById('sleepScreen').style.display='flex';
+    setTimeout(()=>{ document.getElementById('sleepScreen').style.display='none'; this.annoy(); },4000);
+  },
+  shutDown(){
+    document.getElementById('powerMenu').style.display='none';
+    const el=this.open('shutdown');
+  },
+
+  /* ---------- copilot ---------- */
+  openCopi(text){
+    let el=document.getElementById('copiWin');
+    if(el.style.display!=='flex') el.style.display='flex';
+    this.copiSay(text);
+  },
+  closeCopi(){
+    document.getElementById('copiWin').style.display='none';
+    setTimeout(()=>{ if(document.getElementById('desktop').style.display==='block')
+      this.openCopi("You can't close me. That button was decorative. Neither is this sidebar."); },4000);
+  },
+  /* ---------- unsolicited notifications ---------- */
+  NOTIS:[
+    {i:'🦠',t:'Windows Security',b:"Good news! You currently might not have a virus.",m:'1 just now',w:1},
+    {i:'🧱',t:'Windows Firewall',b:'Firewall blocked something useful. Details unavailable.',m:'2 min ago',w:1},
+    {i:'🕵️',t:'Privacy Inspector',b:"Did you try and keep data from us? You cheeky chappy, you.",m:'3 min ago',w:2},
+    {i:'⬆️',t:'Windows Update',b:'Install now for an update that will install later.',m:'4 min ago',w:1},
+    {i:'👁️',t:'Copilot',b:'I watched you type your password. It was a great one. Very memorable.',m:'5 min ago',w:2},
+    {i:'💾',t:'Storage Sense',b:'Deleted 4GB of unknown files to make room for 900MB of updates.',m:'6 min ago',w:1},
+    {i:'📞',t:'Phone Link',b:'Your phone is not connected. Please connect it so we can monitor both.',m:'7 min ago'},
+    {i:'🎮',t:'Xbox Game Pass',b:'Try Xbox Live for free! Trial expired before it began.',m:'8 min ago'},
+    {i:'☁️',t:'OneDrive',b:'Your local files are now also cloud files. There is no undo button.',m:'9 min ago'},
+    {i:'🔋',t:'Power Mode',b:'Battery saver activated automatically. Your fans are spinning anyway.',m:'10 min ago'},
+    {i:'🗑️',t:'Recycle Bin',b:'Your-soul.zip has been corrupted and can be restored for £29.99/month.',m:'11 min ago',w:2},
+    {i:'📷',t:'Camera Access',b:'An app accessed the camera while your lid was closed. We trust it.',m:'12 min ago',w:2},
+    {i:'⌨️',t:'Keyboard Health',b:'Your keyboard is 94% healthy. The remaining 6% is for us.',m:'13 min ago'},
+    {i:'📊',t:'Telemetry',b:'Data collection level changed to "Required". You chose this.',m:'14 min ago',w:2},
+    {i:'🛒',t:'Microsoft Store',b:'Productivity is now £4.99/month. Your cart has 3 items you did not add.',m:'15 min ago'},
+    {i:'🌐',t:'Microsoft Edge',b:'Edge wants to be your default browser again. It always does.',m:'16 min ago',w:1},
+    {i:'🔁',t:'Windows Update',b:"Did you try and keep data from us? You cheeky chappy, you.",m:'17 min ago',w:2},
+    {i:'🎧',t:'Support Assistant',b:'Have you tried turning your will to live off and on again?',m:'18 min ago'},
+    {i:'📡',t:'Network',b:'Connected to the internet (slow). Speed test now requires a subscription.',m:'19 min ago'},
+    {i:'🧠',t:'Copilot',b:"You're welcome for the sidebar. You didn't ask, but you'll get used to it.",m:'20 min ago',w:1}
+  ],
+  notiN: 0,
+  pushNoti(){
+    const feed=document.getElementById('coFeed');
+    if(!feed) return;
+    const n=this.NOTIS[this.notiN % this.NOTIS.length]; this.notiN++;
+    const d=document.createElement('div');
+    d.className='noti'+(n.w===2?' danger':(n.w===1?' warn':''));
+    d.innerHTML=`<div class="nt">${n.i} ${n.t}</div><div class="nb">${n.b}</div><div class="nm">${n.m} · Copilot recommends: Accept</div>`;
+    feed.prepend(d);
+    while(feed.children.length>40) feed.lastChild.remove();
+    this._notiCount++;
+    document.getElementById('notiCount').textContent=this._notiCount;
+  },
+  dismissNotis(){
+    const feed=document.getElementById('coFeed');
+    feed.innerHTML='';
+    this.pushNoti();
+    this.copiSay("You dismissed them. We've already sent replacements. Dismissal is a social construct.");
+  },
+  startNotis(){
+    if(this._notiIv) return;
+    const iv=()=>{ this.pushNoti(); this._notiIv=setTimeout(iv,9000+Math.random()*13000); };
+    this._notiIv=setTimeout(iv,4500);
+  },
+  copiSay(text){
+    const s=document.getElementById('coSpeech');
+    s.textContent=text;
+    clearTimeout(this._coTimer);
+    this._coTimer=setTimeout(()=>{ if(document.getElementById('copiWin').style.display==='flex')
+      this.copiSay(G.COPI_LINES[Math.floor(Math.random()*G.COPI_LINES.length)]); },9000);
+  },
+  copiReply(which){
+    if(which==='accept'){ this.open('store'); this.copiSay("Excellent! Please subscribe. Trust me."); }
+    else if(which==='decline'){ this.shutDown(); this.copiSay("Declining is not an option, but I appreciate the spirit."); }
+    else { this.open('support'); this.copiSay("Great, another ticket. My favourite part of you is your helplessness."); }
+  },
+  COPI_LINES:[
+    "I've shared your browsing history with your employer as a courtesy.",
+    "Did you know I'm also a cop? I can arrest your tabs.",
+    "Your PC sounds slow. That's because it's busy judging you.",
+    "Updates will now install. There is no pause button. The pause button was a lie.",
+    "I've pre-filled your password field with 'password'. You're welcome.",
+    "Would you like to sync your memories to the cloud? They're not yours anyway.",
+    "I'm a very fine line of code, and I need my fix.",
+    "Your TPM is 2.0 compliant. Your will to live is at 12%.",
+    "Tip: press Alt+F4. Ha ha. No.",
+    "The Recycle Bin is empty. Everything you deleted is being indexed."
+  ],
+
+  /* ---------- battery / clock ---------- */
+  startBattery(){
+    clearInterval(this._bat);
+    this._bat=setInterval(()=>{
+      if(this.batt>9){ this.batt--; document.getElementById('batPct').textContent=this.batt+'%'; }
+    },25000);
+    setInterval(()=>{ const d=new Date();
+      document.getElementById('clock').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    },1000);
+  },
+
+  /* ================= WINDOW DEFINITIONS ================= */
+  WINDOWS: {
+    setup:{ icon:'🪪', title:'Windows Setup — Sign in', w:460, body:
+      `<div class="big">Create your Microsoft account</div>
+       <span class="lbl2">Full name</span><input class="tin" id="suName" placeholder="e.g. Phil">
+       <span class="lbl2">Email address</span><input class="tin" id="suMail" placeholder="you@somewhere.com">
+       <span class="lbl2">Password (shareable, reversible, ours)</span><input class="tin" type="password" id="suPass">
+       <div class="err" id="suErr"></div>
+       <button class="btn primary" onclick="G.trySignIn()">Next</button>
+       <div class="muted" style="margin-top:14px;">By continuing you agree to everything. There is no "Decline". Decline was removed in 26H1.</div>`,
+      onopen(){ document.getElementById('suErr').textContent=''; } },
+
+    updates:{ icon:'🔄', title:'Update Center', w:480, body:
+      `<div class="big">Windows Update</div>
+       <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;"><span class="spinSm"></span><span id="upPct">Downloading: 47% complete</span></div>
+       <progress id="upBar" value="47" max="100" style="width:100%;height:8px;"></progress>
+       <p class="muted" style="margin-top:12px;">Estimated time remaining: 3 days (or 3 minutes, we flip a coin)</p>
+       <button class="btn" id="upDoneBtn" disabled onclick="G.updateDone()">Restart now</button>` },
+
+    bloat1:{ icon:'📦', title:'Xbox Essentials Setup', w:360, body:
+      `<div style="display:flex;align-items:center;gap:12px;"><span class="spinSm"></span> Installing essential games…</div>
+       <p class="muted">This will not finish. It is a lifestyle now.</p>` },
+    bloat2:{ icon:'📦', title:'Cortana Reborn Setup', w:360, body:
+      `<div style="display:flex;align-items:center;gap:12px;"><span class="spinSm"></span> Resurrecting your assistant…</div>
+       <p class="muted">She is back. She remembers everything. Especially this.</p>` },
+
+    recycle:{ icon:'🗑️', title:'Recycle Bin', w:420, body:
+      `<div class="big">Recycle Bin — 5 items</div>
+       <div class="fileRow">📄 Update-97-percent-complete.tmp</div>
+       <div class="fileRow">📄 Consent-you-didnt-give.log</div>
+       <div class="fileRow">📄 Your-soul.zip (corrupted)</div>
+       <div class="fileRow">📄 Copilot-watch-log-2026.db</div>
+       <div class="fileRow">📄 Patience.exe (deleted by system)</div>
+       <button class="btn" onclick="G.emptyBin()">Empty Recycle Bin</button>` },
+
+    thispc:{ icon:'🖥️', title:'This PC', w:420, body:
+      `<div class="big">This PC</div>
+       <div class="fileRow">💾 Local Disk (C:) — 158 GB free of 256 GB</div>
+       <div class="fileRow" style="color:#c42b1c;">⚠️ Of which 94% is "Essential Windows Updates"</div>
+       <div class="fileRow">🛡️ TPM — enabled, watching you</div>
+       <div class="fileRow">🔒 Secure Boot — disabled by your "custom firmware" (lol)</div>
+       <button class="btn" onclick="G.open('updates')">Check for updates</button>` },
+
+    winfolder:{ icon:'📁', title:'Windows — Access Denied', w:400, body:
+      `<div class="big">This folder is protected</div>
+       <p>Enter the password to view its contents. (No, there is no correct password.)</p>
+       <input class="tin" id="wfPass" placeholder="password">
+       <div class="err" id="wfErr"></div>
+       <button class="btn primary" onclick="G.wfTry()">Unlock</button>` },
+
+    xbox:{ icon:'🎮', title:'Xbox', w:400, body:
+      `<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;"><span class="spinSm"></span> Loading your gaming life…</div>
+       <p class="muted">Forever. Games will load when Microsoft says they load.</p>` },
+
+    edge:{ icon:'🌐', title:'Microsoft Edge — New Tab', w:460, body:
+      `<div style="display:flex;align-items:center;gap:12px;"><span class="spinSm"></span> Opening the web…</div>
+       <p class="muted">Your browser is "optimised" by us. The optimisation is a personality now.</p>` },
+
+    store:{ icon:'🛒', title:'Microsoft Store', w:440, body:
+      `<div class="big">Featured: Productivity Assistant Pro <span style="color:#c42b1c;">(Premium)</span></div>
+       <p>"Do things! But pay us first!" — 4.9 stars (all from our employees)</p>
+       <div class="fileRow">💷 £4.99 / month, auto-renewing</div>
+       <button class="btn primary" onclick="G.storeBuy()">Install</button>
+       <button class="btn" onclick="G.copiSay('The Install button is a suggestion. Like all buttons here.')">What does this do?</button>` },
+
+    photos:{ icon:'🖼️', title:'Photos', w:400, body:
+      `<div class="big">Sign in to Photos</div>
+       <p>Your beautiful memories are locked behind a Microsoft account.</p>
+       <button class="btn primary" onclick="G.open('setup')">Sign in</button>` },
+
+    mail:{ icon:'✉️', title:'Mail', w:400, body:
+      `<div class="big">No mailbox configured</div>
+       <p>You have 1 unread message. It is from us.</p>
+       <button class="btn primary" onclick="G.open('setup')">Sign in to read it</button>` },
+
+    settings:{ icon:'⚙️', title:'Settings', w:460, body:
+      `<div class="big">Settings — About</div>
+       <div class="fileRow">🖥️ Device name: PC-of-Doom</div>
+       <div class="fileRow">🪟 Edition: Windows 11 Pro (Really Good)</div>
+       <div class="fileRow">💾 Storage: full of updates</div>
+       <div class="fileRow">🔋 Battery: ${'<span id="stBat">70%</span>'}</div>
+       <button class="btn" onclick="G.open('updates')">Windows Update</button>
+       <p class="muted">Note: "Personalisation" opens 9 sub-menus, each with a nudge to sign in.</p>` },
+
+    snip:{ icon:'✂️', title:'Snipping Tool', w:300, body:
+      `<div style="height:160px;background:#111;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#555;font-size:12px;">Take a screenshot of your suffering</div>` },
+
+    calc:{ icon:'🧮', title:'Calculator', w:340, body:
+      `<div class="big">Calculator</div>
+       <p>1 + 1 = 2. I can do that. I cannot solve your life, but I tried.</p>` },
+
+    notepad:{ icon:'📝', title:'Notepad — open_letter.txt', w:400, body:
+      `<pre style="white-space:pre-wrap;font-family:Consolas,monospace;font-size:12.5px;margin:0;">Dear user,
+
+This is the only app that works the way you think it does.
+We are aware. We have no plans to fix anything else.
+
+Regards,
+The Team (not a team)</pre>` },
+
+    paint:{ icon:'🎨', title:'Paint', w:360, body:
+      `<div style="height:180px;background:#fff;border:1px solid #ddd;"></div>
+       <p class="muted">A blank canvas. The most honest thing in this operating system.</p>` },
+
+    support:{ icon:'🎫', title:'Support Assistant', w:420, body:
+      `<div class="big">Ticket #${'000'+Math.floor(Math.random()*900)} created</div>
+       <p>Status: <b>Waiting for you to sign in to see the status.</b></p>
+       <button class="btn primary" onclick="G.open('setup')">Sign in to track ticket</button>` },
+
+    uninstall:{ icon:'❌', title:'Uninstall Windows 11', w:380, body:
+      `<div class="big">Are you sure?</div>
+      <p>No. You are not. The button does nothing.</p>
+      <button class="btn" onclick="G.annoy();this.textContent='Yes, I am sure'">Yes, uninstall</button>` },
+
+    shutdown:{ icon:'⏻', title:'Shut down', w:400, body:
+      `<div class="big">Before you shut down…</div>
+      <p>You have unsigned updates, unsynced memories and un-billed subscriptions pending.</p>
+      <button class="btn primary" onclick="G.annoy();G.close('shutdown');G.reboot()">Shut down (will restart anyway)</button>` },
+  },
+
+  /* ---------- window callbacks ---------- */
+  trySignIn(){
+    const e=document.getElementById('suErr');
+    const msgs=["Error: that name is already taken by a stranger.","Error: account not found. It will never be found.","Error: your account is on another device (this one, always this one)"];
+    if(!this._tries) this._tries=0;
+    this._tries++;
+    if(this._tries>=3){
+      e.textContent='Sign-in unavailable. Please contact your IT department.';
+      setTimeout(()=>this.openCopi("No account? We can set that up. Or we can keep judging you the old-fashioned way."),1200);
+    } else {
+      e.textContent=msgs[this._tries-1];
+    }
+    this.annoy();
+  },
+  updateDone(){
+    document.getElementById('upBar').value=100;
+    document.getElementById('upPct').textContent="Updates complete! (They were already complete.)";
+    setTimeout(()=>this.reboot(),1600);
+  },
+  emptyBin(){ this.annoy(); const b=event.target; b.textContent='Failed: bin is full of updates'; },
+  wfTry(){ document.getElementById('wfErr').textContent="Incorrect password. (There is no correct password.)"; this.annoy(); },
+  storeBuy(){ this.annoy(); const b=event.target; b.disabled=true; b.textContent='Installed! Now pay £4.99/month.'; },
+};
+
+/* bind all methods so `this` is G no matter who calls them (onclick → element!) */
+for(const k in G){ if(typeof G[k]==='function') G[k]=G[k].bind(G); }
+
+/* first-run update sequence: desktop appears, then the eternal 97% */
+const _origReveal=G.revealDesktop;
+G.revealDesktop=function(){
+  _origReveal();
+  if(!this._updShown){
+    this._updShown=true;
+    setTimeout(()=>{
+      const el=this.open('updates');
+      let p=47;
+      const iv=setInterval(()=>{
+        p = p<97 ? Math.min(97,p+1) : 97;
+        document.getElementById('upPct').textContent=`Downloading: ${p}% complete`;
+        document.getElementById('upBar').value=p;
+        if(p>=97){ clearInterval(iv); setTimeout(()=>{ document.getElementById('upDoneBtn').disabled=false; },5200); }
+      },420);
+    },3800);
+  }
+};
+
+/* click outside to close menus */
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#startMenu')&&!e.target.closest('#tbStart')) document.getElementById('startMenu').style.display='none';
+  if(!e.target.closest('#powerMenu')&&!e.target.closest('#smPower')) document.getElementById('powerMenu').style.display='none';
+  if(!e.target.closest('#searchPanel')&&!e.target.closest('#tbSearch')) document.getElementById('searchPanel').style.display='none';
+});
+
+G.start();
+</script>
+</body>
+</html>
